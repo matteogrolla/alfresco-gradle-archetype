@@ -1,0 +1,4 @@
+Javascript unit testing
+
+http://code.google.com/p/js-test-driver/wiki/UsingTheEclipsePlugin
+http://code.google.com/p/js-test-driver/wiki/GettingStarted

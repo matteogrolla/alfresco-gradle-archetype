@@ -1,0 +1,14 @@
+<alfresco-config>	
+
+	<config evaluator="aspect" condition="alfrescoWatermark:watermarkable">
+		<forms>
+			<form>
+				<field-visibility>
+					<show id="alfrescoWatermark:text" force="true" />
+					<show id="alfrescoWatermark:ownerDownloadsOriginal" force="true" />
+				</field-visibility>				
+			</form>			
+		</forms>
+	</config>
+	
+</alfresco-config>

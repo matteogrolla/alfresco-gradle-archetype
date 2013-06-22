@@ -1,0 +1,23 @@
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/svn/fastweb-alfresco/!svn/ver/17/src/main/amp/config/alfresco/module/mind/context
+END
+service-context.xml
+K 25
+svn:wc:ra_dav:version-url
+V 102
+/svn/fastweb-alfresco/!svn/ver/17/src/main/amp/config/alfresco/module/mind/context/service-context.xml
+END
+web-client-config-fasthelp-context.xml
+K 25
+svn:wc:ra_dav:version-url
+V 121
+/svn/fastweb-alfresco/!svn/ver/12/src/main/amp/config/alfresco/module/mind/context/web-client-config-fasthelp-context.xml
+END
+fhModel-model-context.xml
+K 25
+svn:wc:ra_dav:version-url
+V 108
+/svn/fastweb-alfresco/!svn/ver/12/src/main/amp/config/alfresco/module/mind/context/fhModel-model-context.xml
+END

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<model name="@modelPrefix@:contentmodel" xmlns="http://www.alfresco.org/model/dictionary/1.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+    xsi:schemaLocation="http://www.alfresco.org/model/dictionary/1.0 modelSchema.xsd">
+
+   <description>@artifactId@ Content Model</description>
+   <author>Author</author>
+   <version>1.2</version>
+
+   <imports>
+   	  <!-- Import Alfresco Dictionary Definitions -->
+      <import uri="http://www.alfresco.org/model/dictionary/1.0" prefix="d"/>
+      <!-- Import Alfresco Content Domain Model Definitions -->
+      <import uri="http://www.alfresco.org/model/content/1.0" prefix="cm"/>
+   </imports>
+
+   <namespaces>
+      <namespace uri="http://@groupId@/model/@artifactId@/1.0" prefix="@modelPrefix@"/>
+   </namespaces>
+
+  
+
+</model>

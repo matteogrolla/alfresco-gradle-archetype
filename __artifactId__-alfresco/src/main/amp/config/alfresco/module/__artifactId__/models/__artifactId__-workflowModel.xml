@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<model name="@wfModelPrefix@:workflow-green-energy" xmlns="http://www.alfresco.org/model/dictionary/1.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+    xsi:schemaLocation="http://www.alfresco.org/model/dictionary/1.0 modelSchema.xsd">
+
+    <description>@groupId@ Workflow Model</description>
+    <author>Author</author>
+    <version>1.0</version>
+
+   <imports>
+      <import uri="http://www.alfresco.org/model/dictionary/1.0" prefix="d"/>
+      <import uri="http://www.alfresco.org/model/bpm/1.0" prefix="bpm"/>  
+      <import uri="http://www.alfresco.org/model/workflow/1.0" prefix="wf"/>  
+
+   </imports>
+
+   <namespaces>
+      <namespace uri="http:/@groupId@/model/@artifactId@/1.0" prefix="@wfModelPrefix@"/>
+   </namespaces>
+
+   <types>
+
+   </types>
+   
+	<aspects>
+     
+   </aspects>
+	
+</model>

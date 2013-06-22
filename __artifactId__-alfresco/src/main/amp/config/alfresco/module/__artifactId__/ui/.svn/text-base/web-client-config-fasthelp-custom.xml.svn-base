@@ -1,0 +1,59 @@
+<alfresco-config>
+
+   <!--  Configuration for the fh:article aspect -->
+   <config evaluator="aspect-name" condition="fh:article">
+
+      <!-- Display the fh:article properties -->
+      <property-sheet>
+         <separator name="sep" display-label="Fasthelp Article Properties" component-generator="HeaderSeparatorGenerator"  show-in-edit-mode="false"/>
+         <show-property name="fh:articletype" display-label="Article Type" show-in-edit-mode="true" />
+         <show-property name="fh:voti" display-label="Voti" show-in-edit-mode="true" />
+         <show-property name="fh:categoriaFh" display-label="Blocco procedura" show-in-edit-mode="true" />
+         <show-property name="fh:isHome" display-label="E' una home ?" show-in-edit-mode="true" />
+         <show-property name="fh:forum" display-label="Forum" show-in-edit-mode="true" />
+         <show-property name="fh:toPublish" display-label="Data di pubblicazione" show-in-edit-mode="true" />
+         <show-property name="fh:toArchive" display-label="Data di archiviazione" show-in-edit-mode="true" />
+         <show-property name="fh:ordineBlocco" display-label="Ordine blocco" show-in-edit-mode="true" />
+         <show-property name="fh:ordineArticolo" display-label="Ordine articolo" show-in-edit-mode="true" />
+      </property-sheet>
+      
+   </config>
+
+   <!-- Configuration for the fh:status aspect -->
+   <config evaluator="aspect-name" condition="fh:status">
+   
+      <!-- Display the fh:status property -->
+      <property-sheet>
+         <show-property name="fh:status" display-label="Fasthelp Status" show-in-edit-mode="true" />
+      </property-sheet>
+      
+   </config>
+    
+   <!--  Configures the space wizards -->
+   <config evaluator="string-compare" condition="Space Wizards">
+   
+      <!-- Allow for the creation of fh:folder instances -->
+      <folder-types>
+         <type name="fh:space" icon="/images/icons/space-icon-pen.gif" />
+      </folder-types>
+   </config>
+   
+   <!-- Configures the action wizards -->
+   <config evaluator="string-compare" condition="Action Wizards">
+   
+      <!-- Allow the fh:article aspect to be added and removed -->
+      <aspects>
+         <aspect name="fh:article"/>
+         <aspect name="fh:solr_aspect"/>
+      </aspects>
+      
+   </config>
+   
+   <!-- Specify icon for the fh:space instances -->
+   <config evaluator="string-compare" condition="fh:space icons">
+      <icons>
+         <icon name="space-icon-pen" path="/images/icons/space-icon-pen.gif" />
+      </icons>
+   </config>
+
+</alfresco-config>

@@ -1,0 +1,8 @@
+include '@artifactId@-alfresco', '@artifactId@-share'
+
+/* test
+rootProject.name = "@artifactId@"
+
+rootProject.children.each {
+    it.buildFileName = it.name + '.gradle' - '@artifactId@-'
+}*/

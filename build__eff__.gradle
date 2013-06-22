@@ -1,0 +1,22 @@
+import org.apache.tools.ant.filters.ReplaceTokens
+
+/*-- Configuration parameters test--*/
+
+ext.groupId = "@groupId@"
+ext.artifactId = "@artifactId@"
+ext.version = "@version@"
+
+ext.alfDir = "@alfDir@"
+//ext.alfTomcatDir = "/Users/matteogrolla/Development/alfresco/alfresco-enterprise-4.1.x/tomcat"
+ext.shareTomcatDir = "@shareTomcatDir@"
+ext.dbName = "@dbName@"
+ext.alfVersion = "@alfVersion@"
+
+/*-----------------*/
+
+def modelPrefix = artifactId
+////def alfrescoDir = "${alfTomcatDir}/webapps/alfresco"
+////def tokens = [groupId: groupId, artifactId: artifactId, version: version, modelPrefix: modelPrefix, wfModelPrefix: modelPrefix] //, alfDir: alfDir, alfTomcatDir: alfTomcatDir, shareTomcatDir: shareTomcatDir
+
+
+

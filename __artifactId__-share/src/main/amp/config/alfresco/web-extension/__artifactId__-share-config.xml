@@ -1,0 +1,53 @@
+<alfresco-config>
+
+	<!-- cm:content type (creating nodes) -->
+   <!--
+   <config evaluator="model-type" condition="cm:content">
+      <forms>		
+         
+      </forms>
+   </config>
+   -->
+   
+   <!--
+   <config evaluator="string-compare" condition="AdvancedSearch">
+     <advanced-search>
+      	
+     </advanced-search>
+   </config>
+   -->
+   
+   <config evaluator="string-compare" condition="DocumentLibrary">
+	  <!--
+         Used by the "Manage Aspects" action and Rules pages
+
+         For custom aspects, remember to also add the relevant i18n string(s)
+            aspect.cm_myaspect=My Aspect
+      -->
+      <aspects>
+
+         <!--
+            Aspects that a user can see in UI.
+            Used by Rules, aspects are the listed aspects for rule's "has-aspect" action condition.
+         -->
+         <visible>
+            <aspect name="alfrescoWatermark:watermarkable" />
+         </visible>
+
+         <addable>
+         </addable>
+
+         <removeable>
+         </removeable>
+      </aspects>
+
+      <types>
+         <type name="cm:content">
+         </type>
+
+         <type name="cm:folder">
+         </type>
+      </types>
+   </config>
+   
+</alfresco-config>

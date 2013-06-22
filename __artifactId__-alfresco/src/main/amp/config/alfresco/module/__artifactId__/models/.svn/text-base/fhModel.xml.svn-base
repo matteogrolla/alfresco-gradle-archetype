@@ -1,0 +1,230 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<model name="fh:contentmodel" xmlns="http://www.alfresco.org/model/dictionary/1.0">
+
+   <description>Fasthelp Content Model</description>
+   <author>Leonardo Fenu</author>
+   <version>1.2</version>
+
+   <imports>
+   	  <!-- Import Alfresco Dictionary Definitions -->
+      <import uri="http://www.alfresco.org/model/dictionary/1.0" prefix="d"/>
+      <!-- Import Alfresco Content Domain Model Definitions -->
+      <import uri="http://www.alfresco.org/model/content/1.0" prefix="cm"/>
+   </imports>
+
+   <namespaces>
+      <namespace uri="http://www.alfresco.org/model/knowledgebase/1.0" prefix="fh"/>
+   </namespaces>
+
+   <!-- Definisco i constraints -->
+   <constraints>
+         
+      <constraint name="fh:attachmenttype_constraint" type="LIST">
+         <parameter name="allowedValues">
+            <list>
+               <value>Patch</value>
+               <value>Sample</value>
+               <value>Documentation</value>
+            </list>
+         </parameter>
+      </constraint>
+
+      <constraint name="fh:status_constraint" type="LIST">
+         <parameter name="allowedValues">
+            <list>
+               <value>Bozza</value>
+               <value>In approvazione</value>
+               <value>Da pubblicare</value>
+               <value>Pubblicato</value>
+               <value>Archiviato</value>
+            </list>
+         </parameter>
+      </constraint>
+      
+   </constraints>
+
+   <!-- Content Types -->
+   <types>
+      <type name="fh:space">
+         <title>Fasthelp Space</title>
+         <parent>cm:folder</parent>
+      </type>
+
+      <type name="fh:attachment">
+         <title>Attachment</title>
+         <parent>cm:content</parent>
+         <properties>
+            <property name="fh:attachmenttype">
+               <title>Attachment Type</title>
+               <type>d:text</type>
+               <default>Sample</default>
+               <constraints>
+                   <constraint ref="fh:attachmenttype_constraint"/>
+               </constraints>
+            </property>
+         </properties>
+      </type>
+   </types>
+
+   <!-- Aspects -->
+   <aspects>
+   	
+      <!-- Marks a content item as having status -->
+      <aspect name="fh:status">
+         <title>Fasthelp content Status</title>
+         <properties>
+
+            <!-- Adds a new metadata property to the KB article -->
+            <!-- Constrains the value -->
+            <property name="fh:status">
+               <title>Stato</title>
+               <type>d:text</type>
+               <default>Bozza</default>
+               <constraints>
+                  <constraint ref="fh:status_constraint" />
+               </constraints>
+            </property>
+
+         </properties>
+      </aspect>
+      
+      <aspect name="fh:solr_aspect">
+         <title>Solr Docs</title>
+         <properties>
+            <property name="fh:indexed">
+                <title>Indicizzato</title>
+                <type>d:boolean</type>
+                <mandatory>false</mandatory>
+                <multiple>false</multiple>
+                <default>false</default>
+            </property>
+         </properties>
+      </aspect>
+
+      <!-- Marks a content item as a KB Article -->
+      <aspect name="fh:article">
+         <title>Fasthelp Article</title>
+         <properties>
+        
+            <!-- Constrains the value -->
+            <property name="fh:articletype">
+               <title>Article Type</title>
+               <type>d:text</type>
+               <default>Article</default>
+               <constraints>
+                  <constraint type="LIST">
+                     <parameter name="allowedValues">
+                        <list>
+                           <value>Any</value>
+                           <value>Article</value>
+                           <value>FAQ</value>
+                           <value>White Paper</value>
+                        </list>
+                     </parameter>
+                  </constraint>
+               </constraints>
+            </property>
+		    
+		     <property name="fh:voti">
+		       <title>Voto Articolo</title>
+		       <type>d:int</type>
+		       <protected>false</protected>
+		       <mandatory>false</mandatory>
+		       <multiple>false</multiple>
+		       <default>0</default>
+		    </property>
+		    
+		     <property name="fh:forum">
+		       <title>ID Forum</title>
+		       <type>d:int</type>
+		       <protected>false</protected>
+		       <mandatory>false</mandatory>
+		       <multiple>false</multiple>
+		       <default>0</default>
+		    </property>
+		    
+		     <property name="fh:isHome">
+		       <title>Home page</title>
+		       <type>d:boolean</type>
+		       <protected>false</protected>
+		       <mandatory>false</mandatory>
+		       <multiple>false</multiple>
+		       <default>false</default>
+		    </property>
+		    
+		    <property name="fh:ordineBlocco">
+		       <title>Ordine blocco</title>
+		       <type>d:int</type>
+		       <protected>false</protected>
+		       <mandatory>false</mandatory>
+		       <multiple>false</multiple>
+		       <default>0</default>
+		    </property>
+		    
+		    <property name="fh:ordineArticolo">
+		       <title>Ordine Articolo</title>
+		       <type>d:int</type>
+		       <protected>false</protected>
+		       <mandatory>false</mandatory>
+		       <multiple>false</multiple>
+		       <default>0</default>
+		    </property>
+		    
+		    <property name="fh:categoriaFh">
+		       <title>Categoria Fasthelp</title>
+		       <type>d:text</type>
+		       <protected>false</protected>
+		       <mandatory>false</mandatory>
+		       <multiple>false</multiple>
+                	<index enabled="true">
+							<atomic>false</atomic>
+							<stored>true</stored>
+							<tokenised>false</tokenised>
+                    </index>
+		    </property>
+		    
+		    <property name="fh:toPublish">
+		       <title>Data di pubblicazione</title>
+		       <type>d:datetime</type>
+		    </property>
+		    
+		    <property name="fh:toArchive">
+		       <title>Data di archiviazione</title>
+		       <type>d:datetime</type>
+		    </property>
+		    
+         </properties>
+
+         <associations>
+            <child-association name="fh:artifacts">
+               <target>
+                  <class>fh:attachment</class>
+                  <mandatory>false</mandatory>
+                  <many>true</many>
+               </target>
+               <duplicate>true</duplicate>
+            </child-association>
+            <association name="fh:related">
+               <title>Related Articles</title>
+               <source>
+                  <mandatory>false</mandatory>
+                  <many>true</many>
+               </source>
+               <target>
+                  <class>fh:article</class>
+                  <mandatory>false</mandatory>
+                  <many>true</many>
+               </target>
+            </association>
+         </associations>
+
+         <!-- Content with this aspect also receive fh:status aspect -->
+         <mandatory-aspects>
+            <aspect>fh:status</aspect>
+         </mandatory-aspects>
+      </aspect>
+
+   </aspects>
+
+</model>
