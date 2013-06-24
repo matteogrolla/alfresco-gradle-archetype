@@ -41,10 +41,12 @@ def tokens = [groupId: groupId, artifactId: artifactId, version: version, modelP
 
 /*
 TODO: 
+- wipe repository
+- support postgres
 - sistemare settings.gradle
 -fornire una version minimale di template
 -rimuovere i files empty.txt dopo la copia
--fare il filtering solo dei files necessari e delle properties necessarie
+-OK fare il filtering solo dei files necessari e delle properties necessarie
         usando expand se nel file trovo ${var1} e var1 non è definita fallisce il build
         dare nome __artifactid__ ai files di config
 -fornire una versione con esempi di customizzazioni
@@ -52,101 +54,87 @@ TODO:
     -esempio workflow funzionante (vedere se esercizio8 di può pubblicare)
     
 BUGS:
-!!! Important !!!!:
-	il plugin di eclipse sembra bacato
-	se clicco su refresh in gradle cancella
-		build.gradle
-		settings.gradle
-	nel parent project
-	MEGLIO USARE COMMANDLINE
+
 */
 
-task copyAlfrescoProjectFilt(type: Copy){
-    from '__artifactId__-alfresco'
-    into "../${artifactId}/${artifactId}-alfresco"
-
-    eachFile { details ->
-        def targetPath = details.path.replace('__artifactId__', artifactId)
-        targetPath = targetPath.replace('__eff__', '')
-        details.path = targetPath
+task createAlfrescoProject(type: Copy){
+    destinationDir = file('.')
+    into ("../${artifactId}/${artifactId}-alfresco"){
+        from '__artifactId__-alfresco'
+        
+        eachFile { details ->
+            def targetPath = details.path.replace('__artifactId__', artifactId)
+            targetPath = targetPath.replace('__eff__', '')
+            details.path = targetPath
+        }
+    
+        include '**/*.xml'
+        include '**/*.properties'
+        include '**/*__eff__.gradle'
+    
+        filter(ReplaceTokens, tokens: tokens)
+        includeEmptyDirs = false
     }
-
-    include '**/*.xml' 
-    include '**/*.properties'
-    include '**/*__eff__.gradle'
-
-    //def wfModelPrefix = "${modelPrefix}Wf"
-
-    filter(ReplaceTokens, tokens: tokens)
-    includeEmptyDirs = false
-}
-
-task copyAlfrescoProjectNonFilt(type: Copy){
-    from '__artifactId__-alfresco'
-    into "../${artifactId}/${artifactId}-alfresco"
-
-    eachFile { details ->
-        def targetPath = details.path.replace('__artifactId__', artifactId)
-        targetPath = targetPath.replace('__eff__', '')
-        details.path = targetPath
+    into ("../${artifactId}/${artifactId}-alfresco"){
+        from '__artifactId__-alfresco'
+        
+        eachFile { details ->
+            def targetPath = details.path.replace('__artifactId__', artifactId)
+            targetPath = targetPath.replace('__eff__', '')
+            details.path = targetPath
+        }
+    
+        exclude '**/*.xml'
+        exclude '**/*.properties'
+        exclude '**/*.gradle'
+        exclude '**/*__eff__.gradle'
+    
+        includeEmptyDirs = false
     }
-
-    exclude '**/*.xml' 
-    exclude '**/*.properties'
-    exclude '**/*.gradle'
-    exclude '**/*__eff__.gradle'
-
-    includeEmptyDirs = false
-}
-
-task createAlfrescoProject(dependsOn: [copyAlfrescoProjectFilt, copyAlfrescoProjectNonFilt]){
 }
 
 
-task copyShareProjectFilt(type: Copy){
-    from '__artifactId__-share'
-    into "../${artifactId}/${artifactId}-share"
-
-    eachFile { details ->
-        def targetPath = details.path.replace('__artifactId__', artifactId)
-        targetPath = targetPath.replace('__eff__', '')
-        details.path = targetPath
+task createShareProject(type: Copy){
+    destinationDir = file('.')
+    into ("../${artifactId}/${artifactId}-share"){
+        from '__artifactId__-share'
+        
+        eachFile { details ->
+            def targetPath = details.path.replace('__artifactId__', artifactId)
+            targetPath = targetPath.replace('__eff__', '')
+            details.path = targetPath
+        }
+    
+        include '**/*.xml'
+        include '**/*.properties'
+        include '**/*__eff__.gradle'
+    
+        filter(ReplaceTokens, tokens: tokens)
+        includeEmptyDirs = false
     }
-
-    include '**/*.xml' 
-    include '**/*.properties'
-    include '**/*__eff__.gradle'
-
-    //def wfModelPrefix = "${modelPrefix}Wf"
-
-    filter(ReplaceTokens, tokens: tokens)
-    includeEmptyDirs = false
-}
-
-task copyShareProjectNonFilt(type: Copy){
-    from '__artifactId__-share'
-    into "../${artifactId}/${artifactId}-share"
-
-    eachFile { details ->
-        def targetPath = details.path.replace('__artifactId__', artifactId)
-        targetPath = targetPath.replace('__eff__', '')
-        details.path = targetPath
+    into ("../${artifactId}/${artifactId}-share"){
+        from '__artifactId__-share'
+        
+        eachFile { details ->
+            def targetPath = details.path.replace('__artifactId__', artifactId)
+            targetPath = targetPath.replace('__eff__', '')
+            details.path = targetPath
+        }
+    
+        exclude '**/*.xml'
+        exclude '**/*.properties'
+        exclude '**/*.gradle'
+        exclude '**/*__eff__.gradle'
+    
+        includeEmptyDirs = false
     }
-
-    exclude '**/*.xml' 
-    exclude '**/*.properties'
-    exclude '**/*.gradle'
-    exclude '**/*__eff__.gradle'
-
-    includeEmptyDirs = false
-}
-
-task createShareProject(dependsOn: [copyShareProjectFilt, copyShareProjectNonFilt]){
 }
 
 task createProject(type: Copy, dependsOn: [createAlfrescoProject, createShareProject]) {
-	from '.'
-	into "../${artifactId}"
+    from '.'
+    into "../${artifactId}"
+
+    include 'jsTestDriver.conf'
 	include '*__eff__.gradle'
 	
 	eachFile { details ->
@@ -154,5 +142,5 @@ task createProject(type: Copy, dependsOn: [createAlfrescoProject, createSharePro
         details.path = targetPath
     }
 	
-	filter(ReplaceTokens, tokens: tokens)
+    filter(ReplaceTokens, tokens: tokens)
 }

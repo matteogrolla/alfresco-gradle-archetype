@@ -2,122 +2,104 @@
 
 project(':@artifactId@-share') {
 
-	apply plugin: 'java'
+    apply plugin: 'java'
 
-	/*def artifactId = "@artifactId@"
-	def groupId = "@groupId@"
-	def version = "@version@"
+    /*def artifactId = "@artifactId@"
+     def groupId = "@groupId@"
+     def version = "@version@"
+     def alfDir = "@alfDir@"
+     def shareTomcatDir = "@shareTomcatDir@"
+     def alfVersion = "@alfVersion@"*/
 
-	def alfDir = "@alfDir@"
-	def shareTomcatDir = "@shareTomcatDir@"
+    /*
+     TODO: 
+     -completare tasks maven
+     -completare tasks ant
+     -modicare nomi files e directories solo in una fase di inizializzazione (possibilmente durante installazione archetype)        
+     -unit tests (anche js)
+     -integration tests
+     */
 
-        def alfVersion = "@alfVersion@"*/
-    
-	/*
-	TODO: 
-	-completare tasks maven
-	-completare tasks ant
-	-modicare nomi files e directories solo in una fase di inizializzazione (possibilmente durante installazione archetype)        
-	-unit tests (anche js)
-	-integration tests
-	*/
+    task fastDeploy(type: Copy){
+        destinationDir = file("${shareTomcatDir}/webapps/share")
 
-	task fastDeployConfigFilt(type: Copy){
-		from ( fileTree(dir: 'src/main/amp/config') )
-		into "${shareTomcatDir}/webapps/share/WEB-INF/classes"
-  
-		include '**/*.xml' 
-		include '**/*.properties'
+        //config filt
+        into("WEB-INF/classes"){
+            from ( fileTree(dir: 'src/main/amp/config') )
+            include '**/*.xml'
+            include '**/*.properties'
+        }
 
-		//filter(ReplaceTokens, tokens: [key: value])
+        //config non filt
+        into("WEB-INF/classes"){
+            from ( fileTree(dir: 'src/main/amp/config') )
+            exclude '**/*.xml'
+            exclude '**/*.properties'
+        }
 
-	}
+        //web
+        into("."){ from 'src/main/amp/web' }
 
-	task fastDeployConfig(type: Copy){
-		from ( fileTree(dir: 'src/main/amp/config') )
-		into "${shareTomcatDir}/webapps/share/WEB-INF/classes"
+        //libs
+        into("WEB-INF/lib"){ from 'build/libs' }
+    }
 
-		exclude '**/*.xml'
-		exclude '**/*.properties'
+    task createAmp (type: Jar, dependsOn: build){
+        destinationDir file('dist')
+        from ('src/main/amp'){
+            include 'file-mapping.properties'
+            include 'module.properties'
+        }
+        into('lib') { from 'build/libs' }
+        into('WEB-INF/classes/alfresco') { from 'src/main/amp/config/alfresco' }
+        into('web') { from 'src/main/amp/web' }
 
-	}
+        baseName "${artifactId}-share"
+        extension 'amp'
+    }
 
-	task fastDeployWeb(type: Copy){
-		from 'src/main/amp/web'
-		into "${shareTomcatDir}/webapps/share"
+    task deployAmp(type: Copy, dependsOn: createAmp) {
+        from "dist"
+        into "${alfDir}/amps_share"
+    }
 
-	}
+    task restoreWar() << {
+        logger.info("restoring ${shareTomcatDir}/webapps/share.war")
+        delete "${shareTomcatDir}/webapps/share.war"
+        delete "${shareTomcatDir}/webapps/share"
+        copy {
+            from "${shareTomcatDir}/webapps/share.war.bak"
+            into "${shareTomcatDir}/webapps"
+            rename '(.*).bak', '$1'
+        }
+    }
 
-	task fastDeployLibs(type: Copy, dependsOn: build){
-		from 'build/libs'
-		into "${shareTomcatDir}/webapps/share/WEB-INF/lib"
-	}
+    task restoreApp(dependsOn: restoreWar) << {
+        copy {
+            from zipTree("${shareTomcatDir}/webapps/share.war")
+            into "${shareTomcatDir}/webapps/share"
+        }
+    }
 
-	task fastDeploy(dependsOn: [fastDeployConfigFilt, fastDeployConfig, fastDeployWeb, fastDeployLibs]){
-	}
-
-	task createAmp (type: Jar, dependsOn: build){
-		destinationDir file('dist')
-		from ('src/main/amp'){
-			include 'file-mapping.properties'
-			include 'module.properties'
-		}
-		into('lib') {
-			from 'build/libs'
-		}
-		into('WEB-INF/classes/alfresco') {
-			from 'src/main/amp/config/alfresco'
-		}
-		into('web') {
-			from 'src/main/amp/web'
-		}
-	
-		baseName "${artifactId}-share"
-		extension 'amp'
-	}
-
-	task deployAmp(type: Copy, dependsOn: createAmp) {
-		from "dist"
-		into "${alfDir}/amps_share"
-	}
-
-	task restoreWar() << {
-		logger.info("restoring ${shareTomcatDir}/webapps/share.war")
-		delete "${shareTomcatDir}/webapps/share.war" 
-		delete "${shareTomcatDir}/webapps/share"
-		copy {
-			from "${shareTomcatDir}/webapps/share.war.bak" 
-			into "${shareTomcatDir}/webapps"
-			rename '(.*).bak', '$1' 
-		}
-	}
-
-	task restoreApp(dependsOn: restoreWar) << {
-		copy {
-			from zipTree("${shareTomcatDir}/webapps/share.war")
-			into "${shareTomcatDir}/webapps/share"
-		}
-	}
-    
     repositories {
         mavenCentral()
-    
+
         maven {
             name "alfresco-public"
             url "https://artifacts.alfresco.com/nexus/content/groups/public"
         }
-        
+
         maven {
             name "alfresco-public-snapshots"
             url "https://artifacts.alfresco.com/nexus/content/groups/public-snapshots"
         }
-        
+
         maven {
             name "alfresco-thirdparty"
             url "https://artifacts.alfresco.com/nexus/content/repositories/thirdparty/"
         }
     }
-    
+
     dependencies {
         //compile (group: "org.springframework.extensions.surf", name: "spring-surf-api", version: "1.2.0-SNAPSHOT")
     }

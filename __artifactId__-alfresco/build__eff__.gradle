@@ -1,272 +1,249 @@
 project(':@artifactId@-alfresco') {
 
-	apply plugin: 'java'
+    apply plugin: 'java'
 
-	/* Configuration params pr*/
-	/*def artifactId = "@artifactId@"
-	def groupId = "@groupId@"
-	def version = "@version@"*/
+    /* Configuration params pr*/
+    /*def artifactId = "@artifactId@"
+     def groupId = "@groupId@"
+     def version = "@version@"*/
 
-	def mysqldump = "/usr/local/mysql/bin/mysqldump"
-	def mysql = "/usr/local/bin/mysql"
-	def dbUserName = "alfresco"
-	def dbPassword = "alfresco"
-	//def dbName = "@dbName@"
-	def dbDriver = "org.gjt.mm.mysql.Driver"
-	def dbUrl = "jdbc:mysql://localhost/${dbName}"
+    def mysqldump = "/usr/local/mysql/bin/mysqldump"
+    def mysql = "/usr/local/bin/mysql"
+    def dbUserName = "alfresco"
+    def dbPassword = "alfresco"
+    //def dbName = "@dbName@"
+    def dbDriver = "org.gjt.mm.mysql.Driver"
+    def dbUrl = "jdbc:mysql://localhost"
 
-	/*def alfDir = "@alfDir@"
-	def alfTomcatDir = "@alfTomcatDir@"        
-        def alfVersion = "@alfVersion@"*/
-        
-        def alfTomcatDir = "${alfDir}/tomcat"
+    /*def alfDir = "@alfDir@"
+     def alfTomcatDir = "@alfTomcatDir@"        
+     def alfVersion = "@alfVersion@"*/
 
-	/*
-	TODO: 
-	-integration tests
-	-creare un task group alfresco
-	-gestire meglio il filtro sui files da filtrare
-		non posso mettere
-			include '**<slash>*.xml' 
-			exclude '**<slash>*.bpmn20.xml'
-		al momento workaround usare estensione bpmn per i workflow (non compatibile con il tool di deploy di alfresco)
+    def alfTomcatDir = "${alfDir}/tomcat"
 
-	BUGS
-	-il task backup non funziona da eclipse (forse la working directory è quella del proj padre)
-	-il task wipe repository non funziona
-		You have an error in your SQL syntax;
-		near 'create database alfresco_41x character set = UTF8'
-	*/
+    /*
+     TODO: 
+     -integration tests
+     -creare un task group alfresco
+     -gestire meglio il filtro sui files da filtrare
+     non posso mettere
+     include '**<slash>*.xml' 
+     exclude '**<slash>*.bpmn20.xml'
+     al momento workaround usare estensione bpmn per i workflow (non compatibile con il tool di deploy di alfresco)
+     BUGS
+     -il task backup non funziona da eclipse (forse la working directory è quella del proj padre)
+     -il task wipe repository non funziona
+     You have an error in your SQL syntax;
+     near 'create database alfresco_41x character set = UTF8'
+     */
 
-	task fastDeployConfigFilt(type: Copy){
-		from ( fileTree(dir: 'src/main/amp/config') )
-		into "${alfTomcatDir}/webapps/alfresco/WEB-INF/classes"
-  
-		/*eachFile { details ->
-			def targetPath = details.path.replace('__artifactId__', 'bla')
-			details.path = targetPath
-		}*/
+    task fastDeploy(type: Copy){
+        destinationDir = file(alfTomcatDir)
+        println "fast deploying to: ${alfTomcatDir}"
 
-		include '**/*.xml' 
-		include '**/*.properties'
-		//FIXME: this does not work
-                //exclude '**/*.bpmn20.xml'
-
-		expand(project.properties)
-
-		/*includeEmptyDirs = false*/
-	}
-
-	task fastDeployConfig(type: Copy){
-		from ( fileTree(dir: 'src/main/amp/config') )
-		into "${alfTomcatDir}/webapps/alfresco/WEB-INF/classes"
-  
-		/*eachFile { details ->
-			def targetPath = details.path.replace('__artifactId__', 'bla')
-			details.path = targetPath
-		}*/
-
-                //FIXME: this does not work
-		//include '**/*.bpmn20.xml'
-		exclude '**/*.xml'
-		exclude '**/*.properties'
-
-		/*includeEmptyDirs = false*/
-	}
-
-	task fastDeployWeb(type: Copy){
-		from 'src/main/amp/web'
-		into "${alfTomcatDir}/webapps/alfresco"
-
-		includeEmptyDirs = false
-	}
-
-	task fastDeployLibs(type: Copy, dependsOn: build){
-		from 'build/libs'
-		into "${alfTomcatDir}/webapps/alfresco/WEB-INF/lib"
-	}
-
-	task fastDeploy(dependsOn: [fastDeployConfigFilt, fastDeployConfig, fastDeployWeb, fastDeployLibs]){
-	}
-
-	task createAmp (type: Jar, dependsOn: build){
-		destinationDir file('dist')
-		from 'src/main/amp'
-		into('lib') {
-			from 'build/libs'
-		}
-		baseName = "${artifactId}-alfresco"
-		extension 'amp'
-	}
-
-	task deployAmp(type: Copy, dependsOn: createAmp) {
-		from "dist"
-		into "${alfDir}/amps"
-	}
-
-	task restoreWar() << {
-		logger.info("restoring ${alfTomcatDir}/webapps/alfresco.war")
-		delete "${alfTomcatDir}/webapps/alfresco.war" 
-		delete "${alfTomcatDir}/webapps/alfresco"
-		copy {
-			from "${alfTomcatDir}/webapps/alfresco.war.bak" 
-			into "${alfTomcatDir}/webapps"
-			rename '(.*).bak', '$1' 
-		}
-	}
-
-	task restoreApp(dependsOn: restoreWar) << {
-		copy {
-			from zipTree("${alfTomcatDir}/webapps/alfresco.war")
-			into "${alfTomcatDir}/webapps/alfresco"
-		}
-	}
-
-	task backupRepository(type: Zip) {
-		destinationDir = file('data')
-		from "${alfDir}/alf_data"
-		baseName = 'backup'
-	
-		doLast {
-			def cl = "$mysqldump --user=${dbUserName} --password=${dbPassword} ${dbName}".split()
-			def fos = new FileOutputStream('data/backup.sql')
-		
-			/*cl.each() {
-				println it
-			}*/
-		
-			exec {
-				commandLine cl
-				standardOutput = fos 
-			}
-		}
-	}
-
-	task restoreRepository() << {
-		def cl = "${mysql} --user=${dbUserName} --password=${dbPassword} ${dbName}".split()
-		def fis = new FileInputStream('data/backup.sql')
-	
-		/*cl.each() {
-			println it
-		}*/
-	
-		exec {
-			commandLine cl
-			standardInput = fis
-		}
-	
-		delete "${alfDir}/alf_data"
-		copy {
-			from zipTree("data/backup.zip")
-			into "${alfDir}/alf_data"
-		}
-	}
-
-	/* NOT working, see BUGS*/
-	task wipeRepository() << {
-	
-		ant.sql("drop database ${dbName}; create database ${dbName} character set = UTF8;", driver: dbDriver, url: dbUrl, userid: dbUserName, password: dbPassword, classPath: configurations.sql.asPath)	
-			/*grant ALL on ${dbName}.* to '${dbUserName}'@'localhost';*/
-	
-		delete "${alfDir}/alf_data"
-	}
-    
-        test {
-            exclude '**/*IntegrTest.class'
-            testReportDir = file("$testReportDir/unit")
-            testResultsDir = file("$testResultsDir/unit")
+        //config filt
+        into ("webapps/alfresco/WEB-INF/classes"){
+            from ( fileTree(dir: 'src/main/amp/config') )
+            include '**/*.xml'
+            include '**/*.properties'
+            //FIXME: this does not work
+            //exclude '**/*.bpmn20.xml'
+            expand(project.properties)
         }
-        
-        task integrationTest(type: Test) {
-            include '**/*IntegrTest.class'
-            testReportDir = file("$testReportDir/integration")
-            testResultsDir = file("$testResultsDir/integration")
-        }
-    
-        check.dependsOn integrationTest
 
-	repositories {
-            mavenCentral()
-        
-            maven {
-                name "alfresco-public"
-                url "https://artifacts.alfresco.com/nexus/content/groups/public"
-            }
-            
-            maven {
-                name "alfresco-public-snapshots"
-                url "https://artifacts.alfresco.com/nexus/content/groups/public-snapshots"
-            }
-            
-            maven {
-                name "alfresco-thirdparty"
-                url "https://artifacts.alfresco.com/nexus/content/repositories/thirdparty/"
+        //config non filt
+        into ("webapps/alfresco/WEB-INF/classes"){
+            from ( fileTree(dir: 'src/main/amp/config') )
+            //FIXME: this does not work
+            //include '**/*.bpmn20.xml'
+            exclude '**/*.xml'
+            exclude '**/*.properties'
+        }
+
+        //web
+        into ("webapps/alfresco"){ from 'src/main/amp/web' }
+
+        //libs
+        into ("webapps/alfresco/WEB-INF/lib"){ from 'build/libs' }
+    }
+
+    task createAmp (type: Jar, dependsOn: build){
+        destinationDir file('dist')
+        from 'src/main/amp'
+        into('lib') { from 'build/libs' }
+        baseName = "${artifactId}-alfresco"
+        extension 'amp'
+    }
+
+    task deployAmp(type: Copy, dependsOn: createAmp) {
+        from "dist"
+        into "${alfDir}/amps"
+    }
+
+    task restoreWar() << {
+        logger.info("restoring ${alfTomcatDir}/webapps/alfresco.war")
+        delete "${alfTomcatDir}/webapps/alfresco.war"
+        delete "${alfTomcatDir}/webapps/alfresco"
+        copy {
+            from "${alfTomcatDir}/webapps/alfresco.war.bak"
+            into "${alfTomcatDir}/webapps"
+            rename '(.*).bak', '$1'
+        }
+    }
+
+    task restoreApp(dependsOn: restoreWar) << {
+        copy {
+            from zipTree("${alfTomcatDir}/webapps/alfresco.war")
+            into "${alfTomcatDir}/webapps/alfresco"
+        }
+    }
+
+    task backupRepository(type: Zip) {
+        destinationDir = file('data')
+        from "${alfDir}/alf_data"
+        baseName = 'backup'
+
+        doLast {
+            def cl = "$mysqldump --user=${dbUserName} --password=${dbPassword} ${dbName}".split()
+            def fos = new FileOutputStream('data/backup.sql')
+
+            /*cl.each() {
+             println it
+             }*/
+
+            exec {
+                commandLine cl
+                standardOutput = fos
             }
         }
+    }
 
+    task restoreRepository() << {
+        def cl = "${mysql} --user=${dbUserName} --password=${dbPassword} ${dbName}".split()
+        def fis = new FileInputStream('data/backup.sql')
 
-	configurations {
-		sql
-	}
+        /*cl.each() {
+         println it
+         }*/
 
-	dependencies {
-                /*
-                // compile "org.alfresco:alfresco:${alfVersion}" classifier war
-                // compile "org.alfresco:alfresco:${alfVersion}" classifier config
-                compile (group: "org.alfresco", name: "alfresco-core", version: alfVersion){
-                    exclude group: 'org.mybatis', module: 'mybatis'
-                    exclude group: 'javax.jms', module: 'jms'
-                    exclude group: 'com.sun.jdmk', module: 'jmxtools'
-                    exclude group: 'com.sun.jmx', module: 'jmxri'
-                    exclude group: 'maven-plugins'
-                    exclude group: 'commons-dbcp', module: 'commons-dbcp'
-                }
-                // testCompile (group: "org.alfresco", name: "alfresco-core", version: alfVersion, classifier: "config")
-                compile (group: "org.alfresco", name: "alfresco-data-model", version: alfVersion) {
-                    exclude group: 'org.mybatis', module: 'mybatis'
-                    exclude group: 'javax.jms', module: 'jms'
-                    exclude group: 'com.sun.jdmk', module: 'jmxtools'
-                    exclude group: 'com.sun.jmx', module: 'jmxri'
-                    exclude group: 'maven-plugins'
-                    exclude group: 'commons-dbcp', module: 'commons-dbcp'
-                }
-                compile (group: "org.alfresco", name: "alfresco-jlan-embed", version: alfVersion) {
-                    exclude group: 'org.mybatis', module: 'mybatis'
-                    exclude group: 'javax.jms', module: 'jms'
-                    exclude group: 'com.sun.jdmk', module: 'jmxtools'
-                    exclude group: 'com.sun.jmx', module: 'jmxri'
-                    exclude group: 'maven-plugins'
-                    exclude group: 'commons-dbcp', module: 'commons-dbcp'
-                }
-                //testCompile (group: "org.alfresco", name: "alfresco-mbeans}", version: alfVersion){
-                //    exclude group: 'javax.jms', module: 'jms'
-                //}
-                compile (group: "org.alfresco", name: "alfresco-remote-api", version: alfVersion) {
-                    exclude group: 'org.mybatis', module: 'mybatis'
-                    exclude group: 'javax.jms', module: 'jms'
-                    exclude group: 'com.sun.jdmk', module: 'jmxtools'
-                    exclude group: 'com.sun.jmx', module: 'jmxri'
-                    exclude group: 'maven-plugins'
-                    exclude group: 'commons-dbcp', module: 'commons-dbcp'
-                }
-                // testCompile (group: "org.alfresco", name: "alfresco-remote-api", version: alfVersion, classifier: "config")
-                compile (group: "org.alfresco", name: "alfresco-repository", version: alfVersion) {
-                    exclude group: 'org.mybatis', module: 'mybatis'
-                    exclude group: 'javax.jms', module: 'jms'
-                    exclude group: 'com.sun.jdmk', module: 'jmxtools'
-                    exclude group: 'com.sun.jmx', module: 'jmxri'
-                    exclude group: 'maven-plugins'
-                    exclude group: 'commons-dbcp', module: 'commons-dbcp'
-                }
-                // testCompile (group: "org.alfresco", name: "alfresco-repository", version: alfVersion, classifier: "config")
-                */
-                
-                // compile "org.apache.commons:commons-lang3:3.1"
-                testCompile "junit:junit:4.11"
-                sql "mysql:mysql-connector-java:5.1.25"
-                testRuntime "mysql:mysql-connector-java:5.1.25"
-                
-                //testCompile (group: "org.mybatis", name: "mybatis", version: "3.0.4")   //, classifier: "patched"
-                //testCompile (group: "org.tuckey", name: "urlrewritefilter", version: "3.2.0") 
+        exec {
+            commandLine cl
+            standardInput = fis
         }
+
+        delete "${alfDir}/alf_data"
+        copy {
+            from zipTree("data/backup.zip")
+            into "${alfDir}/alf_data"
+        }
+    }
+
+    task wipeRepository() << {
+        println "wiping repository ${dbName}"
+        ant.sql(driver: dbDriver, url: dbUrl, userid: dbUserName, password: dbPassword, classPath: configurations.sql.asPath){
+            transaction("""\
+drop database ${dbName};
+create database ${dbName} character set = UTF8;
+grant ALL on ${dbName}.* to '${dbUserName}'@'localhost' with grant option;""")
+        }
+
+        delete "${alfDir}/alf_data"
+    }
+
+    test {
+        exclude '**/*IntegrTest.class'
+        testReportDir = file("$testReportDir/unit")
+        testResultsDir = file("$testResultsDir/unit")
+    }
+
+    task integrationTest(type: Test) {
+        include '**/*IntegrTest.class'
+        testReportDir = file("$testReportDir/integration")
+        testResultsDir = file("$testResultsDir/integration")
+    }
+
+    check.dependsOn integrationTest
+
+    repositories {
+        mavenCentral()
+
+        maven {
+            name "alfresco-public"
+            url "https://artifacts.alfresco.com/nexus/content/groups/public"
+        }
+
+        maven {
+            name "alfresco-public-snapshots"
+            url "https://artifacts.alfresco.com/nexus/content/groups/public-snapshots"
+        }
+
+        maven {
+            name "alfresco-thirdparty"
+            url "https://artifacts.alfresco.com/nexus/content/repositories/thirdparty/"
+        }
+    }
+
+
+    configurations { sql }
+
+    dependencies {
+        /*
+         // compile "org.alfresco:alfresco:${alfVersion}" classifier war
+         // compile "org.alfresco:alfresco:${alfVersion}" classifier config
+         compile (group: "org.alfresco", name: "alfresco-core", version: alfVersion){
+         exclude group: 'org.mybatis', module: 'mybatis'
+         exclude group: 'javax.jms', module: 'jms'
+         exclude group: 'com.sun.jdmk', module: 'jmxtools'
+         exclude group: 'com.sun.jmx', module: 'jmxri'
+         exclude group: 'maven-plugins'
+         exclude group: 'commons-dbcp', module: 'commons-dbcp'
+         }
+         // testCompile (group: "org.alfresco", name: "alfresco-core", version: alfVersion, classifier: "config")
+         compile (group: "org.alfresco", name: "alfresco-data-model", version: alfVersion) {
+         exclude group: 'org.mybatis', module: 'mybatis'
+         exclude group: 'javax.jms', module: 'jms'
+         exclude group: 'com.sun.jdmk', module: 'jmxtools'
+         exclude group: 'com.sun.jmx', module: 'jmxri'
+         exclude group: 'maven-plugins'
+         exclude group: 'commons-dbcp', module: 'commons-dbcp'
+         }
+         compile (group: "org.alfresco", name: "alfresco-jlan-embed", version: alfVersion) {
+         exclude group: 'org.mybatis', module: 'mybatis'
+         exclude group: 'javax.jms', module: 'jms'
+         exclude group: 'com.sun.jdmk', module: 'jmxtools'
+         exclude group: 'com.sun.jmx', module: 'jmxri'
+         exclude group: 'maven-plugins'
+         exclude group: 'commons-dbcp', module: 'commons-dbcp'
+         }
+         //testCompile (group: "org.alfresco", name: "alfresco-mbeans}", version: alfVersion){
+         //    exclude group: 'javax.jms', module: 'jms'
+         //}
+         compile (group: "org.alfresco", name: "alfresco-remote-api", version: alfVersion) {
+         exclude group: 'org.mybatis', module: 'mybatis'
+         exclude group: 'javax.jms', module: 'jms'
+         exclude group: 'com.sun.jdmk', module: 'jmxtools'
+         exclude group: 'com.sun.jmx', module: 'jmxri'
+         exclude group: 'maven-plugins'
+         exclude group: 'commons-dbcp', module: 'commons-dbcp'
+         }
+         // testCompile (group: "org.alfresco", name: "alfresco-remote-api", version: alfVersion, classifier: "config")
+         compile (group: "org.alfresco", name: "alfresco-repository", version: alfVersion) {
+         exclude group: 'org.mybatis', module: 'mybatis'
+         exclude group: 'javax.jms', module: 'jms'
+         exclude group: 'com.sun.jdmk', module: 'jmxtools'
+         exclude group: 'com.sun.jmx', module: 'jmxri'
+         exclude group: 'maven-plugins'
+         exclude group: 'commons-dbcp', module: 'commons-dbcp'
+         }
+         // testCompile (group: "org.alfresco", name: "alfresco-repository", version: alfVersion, classifier: "config")
+         */
+
+        // compile "org.apache.commons:commons-lang3:3.1"
+        testCompile "junit:junit:4.11"
+        sql "mysql:mysql-connector-java:5.1.25"
+        testRuntime "mysql:mysql-connector-java:5.1.25"
+
+        //testCompile (group: "org.mybatis", name: "mybatis", version: "3.0.4")   //, classifier: "patched"
+        //testCompile (group: "org.tuckey", name: "urlrewritefilter", version: "3.2.0")
+    }
 }
