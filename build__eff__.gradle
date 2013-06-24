@@ -11,6 +11,7 @@ ext.alfDir = "@alfDir@"
 ext.shareTomcatDir = "@shareTomcatDir@"
 ext.dbName = "@dbName@"
 ext.alfVersion = "@alfVersion@"
+ext.jsTestDriver = "/opt/JsTestDriver-1.3.5.jar"
 
 /*-----------------*/
 
@@ -18,5 +19,18 @@ def modelPrefix = artifactId
 ////def alfrescoDir = "${alfTomcatDir}/webapps/alfresco"
 ////def tokens = [groupId: groupId, artifactId: artifactId, version: version, modelPrefix: modelPrefix, wfModelPrefix: modelPrefix] //, alfDir: alfDir, alfTomcatDir: alfTomcatDir, shareTomcatDir: shareTomcatDir
 
+//TODO: test
+task startJsTestsServer(){
+    doLast {
+        def cl = "java -jar ${jsTestDriver} --port 42442 --browser open"
+        exec {
+            commandLine cl
+        }
+    }
+}
 
-
+task runJsTests() {
+    doLast {
+        def cl = "java -jar ${jsTestDriver} --tests all --testOutput build/test-results/js"
+    }
+}
