@@ -21,6 +21,9 @@ project(':@artifactId@-share') {
      */
 
     task fastDeploy(type: Copy){
+        group = "Alfresco"
+        description = "Deploy project to Alfresco"
+        
         destinationDir = file("${shareTomcatDir}/webapps/share")
 
         //config filt
@@ -45,6 +48,9 @@ project(':@artifactId@-share') {
     }
 
     task createAmp (type: Jar, dependsOn: build){
+        group = "Alfresco"
+        description = "Create AMP"
+        
         destinationDir file('dist')
         from ('src/main/amp'){
             include 'file-mapping.properties'
@@ -59,25 +65,38 @@ project(':@artifactId@-share') {
     }
 
     task deployAmp(type: Copy, dependsOn: createAmp) {
+        group = "Alfresco"
+        description = "Deploy AMP to Alfresco"
+        
         from "dist"
         into "${alfDir}/amps_share"
     }
 
-    task restoreWar() << {
-        logger.info("restoring ${shareTomcatDir}/webapps/share.war")
-        delete "${shareTomcatDir}/webapps/share.war"
-        delete "${shareTomcatDir}/webapps/share"
-        copy {
-            from "${shareTomcatDir}/webapps/share.war.bak"
-            into "${shareTomcatDir}/webapps"
-            rename '(.*).bak', '$1'
+    task restoreWar() {
+        group = "Alfresco"
+        description = "Restore alfresco.war from alfresco.war.bak"
+        
+        doLast {
+            logger.info("restoring ${shareTomcatDir}/webapps/share.war")
+            delete "${shareTomcatDir}/webapps/share.war"
+            delete "${shareTomcatDir}/webapps/share"
+            copy {
+                from "${shareTomcatDir}/webapps/share.war.bak"
+                into "${shareTomcatDir}/webapps"
+                rename '(.*).bak', '$1'
+            }
         }
     }
 
-    task restoreApp(dependsOn: restoreWar) << {
-        copy {
-            from zipTree("${shareTomcatDir}/webapps/share.war")
-            into "${shareTomcatDir}/webapps/share"
+    task restoreApp(dependsOn: restoreWar) {
+        group = "Alfresco"
+        description = "Restore webapps/alfresco from alfresco.war.bak"
+        
+        doLast {
+            copy {
+                from zipTree("${shareTomcatDir}/webapps/share.war")
+                into "${shareTomcatDir}/webapps/share"
+            }
         }
     }
 

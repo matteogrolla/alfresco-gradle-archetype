@@ -38,6 +38,9 @@ project(':@artifactId@-alfresco') {
      */
 
     task fastDeploy(type: Copy){
+        group = "Alfresco"
+        description = "Deploy project to Alfresco"
+        
         destinationDir = file(alfTomcatDir)
         println "fast deploying to: ${alfTomcatDir}"
 
@@ -68,6 +71,9 @@ project(':@artifactId@-alfresco') {
     }
 
     task createAmp (type: Jar, dependsOn: build){
+        group = "Alfresco"
+        description = "Create AMP"
+        
         destinationDir file('dist')
         from 'src/main/amp'
         into('lib') { from 'build/libs' }
@@ -76,29 +82,45 @@ project(':@artifactId@-alfresco') {
     }
 
     task deployAmp(type: Copy, dependsOn: createAmp) {
+        group = "Alfresco"
+        description = "Deploy AMP to Alfresco"
+        
         from "dist"
         into "${alfDir}/amps"
     }
 
-    task restoreWar() << {
-        logger.info("restoring ${alfTomcatDir}/webapps/alfresco.war")
-        delete "${alfTomcatDir}/webapps/alfresco.war"
-        delete "${alfTomcatDir}/webapps/alfresco"
-        copy {
-            from "${alfTomcatDir}/webapps/alfresco.war.bak"
-            into "${alfTomcatDir}/webapps"
-            rename '(.*).bak', '$1'
+    task restoreWar() {
+        group = "Alfresco"
+        description = "Restore alfresco.war from alfresco.war.bak"
+        
+        doLast {
+            logger.info("restoring ${alfTomcatDir}/webapps/alfresco.war")
+            delete "${alfTomcatDir}/webapps/alfresco.war"
+            delete "${alfTomcatDir}/webapps/alfresco"
+            copy {
+                from "${alfTomcatDir}/webapps/alfresco.war.bak"
+                into "${alfTomcatDir}/webapps"
+                rename '(.*).bak', '$1'
+            }
         }
     }
 
-    task restoreApp(dependsOn: restoreWar) << {
-        copy {
-            from zipTree("${alfTomcatDir}/webapps/alfresco.war")
-            into "${alfTomcatDir}/webapps/alfresco"
+    task restoreApp(dependsOn: restoreWar) {
+        group = "Alfresco"
+        description = "Restore webapps/alfresco from alfresco.war.bak"
+        
+        doLast {
+            copy {
+                from zipTree("${alfTomcatDir}/webapps/alfresco.war")
+                into "${alfTomcatDir}/webapps/alfresco"
+            }
         }
     }
 
     task backupRepository(type: Zip) {
+        group = "Alfresco"
+        description = "Backup Alfresco repository"
+        
         destinationDir = file('data')
         from "${alfDir}/alf_data"
         baseName = 'backup'
@@ -118,36 +140,46 @@ project(':@artifactId@-alfresco') {
         }
     }
 
-    task restoreRepository() << {
-        def cl = "${mysql} --user=${dbUserName} --password=${dbPassword} ${dbName}".split()
-        def fis = new FileInputStream('data/backup.sql')
-
-        /*cl.each() {
-         println it
-         }*/
-
-        exec {
-            commandLine cl
-            standardInput = fis
-        }
-
-        delete "${alfDir}/alf_data"
-        copy {
-            from zipTree("data/backup.zip")
-            into "${alfDir}/alf_data"
+    task restoreRepository() {
+        group = "Alfresco"
+        description = "Restore Alfresco repository from previous backup"
+        
+        doLast {
+            def cl = "${mysql} --user=${dbUserName} --password=${dbPassword} ${dbName}".split()
+            def fis = new FileInputStream('data/backup.sql')
+    
+            /*cl.each() {
+             println it
+             }*/
+    
+            exec {
+                commandLine cl
+                standardInput = fis
+            }
+    
+            delete "${alfDir}/alf_data"
+            copy {
+                from zipTree("data/backup.zip")
+                into "${alfDir}/alf_data"
+            }
         }
     }
 
-    task wipeRepository() << {
-        println "wiping repository ${dbName}"
-        ant.sql(driver: dbDriver, url: dbUrl, userid: dbUserName, password: dbPassword, classPath: configurations.sql.asPath){
-            transaction("""\
+    task wipeRepository() {
+        group = "Alfresco"
+        description = "Wipe Alfresco repository (to start fresh)"
+        
+        doLast {
+            println "wiping repository ${dbName}"
+            ant.sql(driver: dbDriver, url: dbUrl, userid: dbUserName, password: dbPassword, classPath: configurations.sql.asPath){
+                transaction("""\
 drop database ${dbName};
 create database ${dbName} character set = UTF8;
 grant ALL on ${dbName}.* to '${dbUserName}'@'localhost' with grant option;""")
+            }
+    
+            delete "${alfDir}/alf_data"
         }
-
-        delete "${alfDir}/alf_data"
     }
 
     test {

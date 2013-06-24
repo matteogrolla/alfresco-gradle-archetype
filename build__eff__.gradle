@@ -21,6 +21,8 @@ def modelPrefix = artifactId
 
 //TODO: test
 task startJsTestsServer(){
+    group = "Alfresco"
+    description = "starts jsTestDriver Server"
     doLast {
         def cl = "java -jar ${jsTestDriver} --port 42442 --browser open"
         exec {
@@ -30,6 +32,8 @@ task startJsTestsServer(){
 }
 
 task runJsTests() {
+    group = "Alfresco"
+    description = "starts jsTestDriver Server"
     doLast {
         def cl = "java -jar ${jsTestDriver} --tests all --testOutput build/test-results/js"
     }
